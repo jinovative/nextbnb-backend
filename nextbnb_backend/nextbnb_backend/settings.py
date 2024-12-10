@@ -1,34 +1,44 @@
 import os
+
 from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY SETTINGS
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
+
+# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
-# Debug Mode 설정 (배포 환경에서는 반드시 False)
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True #bool(os.environ.get("DEBUG", default=0))
 
-# IP 주소 및 도메인 추가
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "34.48.2.107"]
+if DEBUG:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "34.48.2.107"]
+else:
+    ALLOWED_HOSTS = ["34.48.2.107"]
 
-# AUTHENTICATION
 AUTH_USER_MODEL = 'useraccount.User'
 
 SITE_ID = 1
 
-# CHANNEL LAYERS
+if DEBUG:
+    WEBSITE_URL = 'http://localhost:8000'
+else:
+    WEBSITE_URL = 'http://34.48.2.107:1337'
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer'
     }
 }
 
-# JWT 설정
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
@@ -39,7 +49,12 @@ SIMPLE_JWT = {
     "ALOGRIGTHM": "HS512",
 }
 
-# REST Framework
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_VERIFICATION = None
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -49,40 +64,113 @@ REST_FRAMEWORK = {
     )
 }
 
-# CORS 설정
 CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://127.0.0.1:3000',
-    'http://34.48.2.107',  # Google Cloud VM의 IP 주소
+    'http://34.48.2.107',
+    'http://34.48.2.107:1337'
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://127.0.0.1:3000',
-    'http://34.48.2.107',  # Google Cloud VM의 IP 주소
+    'http://34.48.2.107',
+    'http://34.48.2.107:1337'
 ]
 
-# CORS를 모든 도메인에서 허용 (선택 사항, 보안 주의)
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ORIGINS_WHITELIST = [
+    'http://127.0.0.1:8000',
+    'http://127.0.0.1:3000',
+    'http://34.48.2.107',
+    'http://34.48.2.107:1337'
+]
 
-# STATIC/MEDIA 설정
-STATIC_URL = 'static/'
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+CORS_ALLOW_ALL_ORIGINS = True
 
-# Database 설정
+REST_AUTH = {
+    "USE_JWT": True,
+    "JWT_AUTH_HTTPONLY": False
+}
+
+# Application definition
+
+INSTALLED_APPS = [
+    'daphne',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
+
+    'allauth',
+    'allauth.account',
+
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+
+    'corsheaders',
+
+    'chat',
+    'property',
+    'useraccount',
+]
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'nextbnb_backend.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'nextbnb_backend.wsgi.application'
+ASGI_APPLICATION = 'nextbnb_backend.asgi.application'
+
+
+# Database
+# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get("SQL_ENGINE", "django.db.backends.postgresql"),
-        'NAME': os.environ.get("SQL_DATABASE", "nextbnb"),
-        'USER': os.environ.get("SQL_USER", "postgresuser"),
-        'PASSWORD': os.environ.get("SQL_PASSWORD", "postgrespassword"),
-        'HOST': os.environ.get("SQL_HOST", "db"),
-        'PORT': os.environ.get("SQL_PORT", "5432"),
+        'ENGINE': os.environ.get("SQL_ENGINE"),
+        'NAME': os.environ.get("SQL_DATABASE"),
+        'USER': os.environ.get("SQL_USER"),
+        'PASSWORD': os.environ.get("SQL_PASSWORD"),
+        'HOST': os.environ.get("SQL_HOST"),
+        'PORT': os.environ.get("SQL_PORT"),
     }
 }
 
+
 # Password validation
+# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -98,10 +186,27 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
 # Internationalization
+# https://docs.djangoproject.com/en/5.0/topics/i18n/
+
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'UTC'
+
 USE_I18N = True
+
 USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.0/howto/static-files/
+
+STATIC_URL = 'static/'
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
